@@ -13,7 +13,10 @@
 
 0.2 핵심 설계 원칙과 적용 방식
 
-원칙이 프로젝트에서의 구체적 적용SOLID모든 "직업", "총기", "적", "포탑"은 인터페이스(계약)로 추상화하고, 구체 구현은 별도 클래스+데이터 정의(Config/Registry)로 분리한다. 새 총기 하나를 추가할 때 기존 코드를 수정하지 않고 새 클래스+등록 한 줄만 추가되도록 한다 (OCP).이벤트 기반 구조Bukkit/Paper의 Event/Listener 체계를 게임 자체 로직에도 그대로 확장한다. 코어 피격, NPC 사망, 웨이브 종료, 광물 채굴 등 모든 상태 변화는 커스텀 이벤트를 발행(fire)하고, 각 시스템은 그 이벤트를 구독(subscribe)하는 방식으로만 상호작용한다. 시스템 간 직접 참조(강결합)를 최소화한다.데이터/로직 분리총기 스탯, 몬스터 스탯, 웨이브 구성, 직업 트리 수치 등은 전부 YAML Config 또는 JSON 데이터 파일로 외부화하고, 로직 클래스는 그 데이터를 "해석"만 한다. 밸런스 수정 시 재컴파일이 필요 없도록 한다.Registry 패턴총기, 직업, 전문화, 포탑, NPC 종류, 웨이브 등 "종류가 계속 늘어나는" 모든 요소는 중앙 Registry에 등록하고 ID로 조회한다.Factory 패턴몬스터, 총알(Projectile), NPC, 포탑 등 반복 생성되는 객체는 Factory를 통해 생성하여 생성 로직을 한 곳에 모은다.Strategy 패턴총기 발사 방식(단발/연발/저격), 힐 방식(지속/범위/집중), AI 행동(공격/도주/채굴) 등 "같은 부모 아래 동작 방식이 갈리는" 요소에 적용한다.State 패턴웨이브 상태(대기/진행/보상/휴식), 코어 상태(정상/위험/파괴), NPC 상태(대기/작업/전투/사망) 등 명확한 상태 전이가 있는 도메인에 적용한다.확장 전제 설계모든 Enum 대신 가능하면 문자열 ID + Registry 조회 방식을 사용하여, 서버 재시작 없이 데이터팩/애드온 형태로 콘텐츠를 추가할 수 있는 여지를 남긴다.
+원칙이 프로젝트에서의 구체적 적용SOLID모든 "직업", "총기", "적", "포탑"은 인터페이스(계약)로 추상화하고, 구체 구현은 별도 클래스+데이터 정의
+│   │       │   │   ├── classes.yml
+│   │       │   │   └── specializations.yml
+│   │       │   ├── npc/(Config/Registry)로 분리한다. 새 총기 하나를 추가할 때 기존 코드를 수정하지 않고 새 클래스+등록 한 줄만 추가되도록 한다 (OCP).이벤트 기반 구조Bukkit/Paper의 Event/Listener 체계를 게임 자체 로직에도 그대로 확장한다. 코어 피격, NPC 사망, 웨이브 종료, 광물 채굴 등 모든 상태 변화는 커스텀 이벤트를 발행(fire)하고, 각 시스템은 그 이벤트를 구독(subscribe)하는 방식으로만 상호작용한다. 시스템 간 직접 참조(강결합)를 최소화한다.데이터/로직 분리총기 스탯, 몬스터 스탯, 웨이브 구성, 직업 트리 수치 등은 전부 YAML Config 또는 JSON 데이터 파일로 외부화하고, 로직 클래스는 그 데이터를 "해석"만 한다. 밸런스 수정 시 재컴파일이 필요 없도록 한다.Registry 패턴총기, 직업, 전문화, 포탑, NPC 종류, 웨이브 등 "종류가 계속 늘어나는" 모든 요소는 중앙 Registry에 등록하고 ID로 조회한다.Factory 패턴몬스터, 총알(Projectile), NPC, 포탑 등 반복 생성되는 객체는 Factory를 통해 생성하여 생성 로직을 한 곳에 모은다.Strategy 패턴총기 발사 방식(단발/연발/저격), 힐 방식(지속/범위/집중), AI 행동(공격/도주/채굴) 등 "같은 부모 아래 동작 방식이 갈리는" 요소에 적용한다.State 패턴웨이브 상태(대기/진행/보상/휴식), 코어 상태(정상/위험/파괴), NPC 상태(대기/작업/전투/사망) 등 명확한 상태 전이가 있는 도메인에 적용한다.확장 전제 설계모든 Enum 대신 가능하면 문자열 ID + Registry 조회 방식을 사용하여, 서버 재시작 없이 데이터팩/애드온 형태로 콘텐츠를 추가할 수 있는 여지를 남긴다.
 
 0.3 기술 스택 확정
 
@@ -171,9 +174,6 @@ core-defense-plugin/
 │   │       │   │   ├── guns.yml
 │   │       │   │   └── melee.yml
 │   │       │   ├── classes/
-│   │       │   │   ├── classes.yml
-│   │       │   │   └── specializations.yml
-│   │       │   ├── npc/
 │   │       │   │   ├── npc_traits.yml
 │   │       │   │   └── npc_recruit_pool.yml
 │   │       │   ├── mining/
@@ -1185,36 +1185,5 @@ MonsterKilledEvent처럼 짧은 시간에 대량 발생 가능한 이벤트는 �
 
 
 주요 시스템(웨이브 스폰, 포탑 타겟팅, 데미지 계산, 저장 I/O)에 PerformanceMonitor(간단한 타이머 유틸)를 삽입 지점으로 예비하여, 운영 중 병목 구간을 계측 가능하게 한다.
-
-
-
-24. 향후 기능 확장 전략
-
-24.1 콘텐츠 확장 로드맵 (설계가 이미 지원하는 확장 지점)
-
-확장 아이디어이미 준비된 확장 지점신규 총기 추가guns.yml 항목 추가 + 필요 시 FireModeStrategy 신규 구현체신규 몬스터/보스MonsterRegistry + wave_definitions.yml신규 직업/전문화ClassRegistry + classes.yml/specializations.yml신규 포탑/장벽 재질StructureRegistry + turrets.yml/walls.yml신규 NPC 특성TraitRegistry + npc_traits.yml신규 맵/테마 코어SpawnPointGroup + 스키매틱 세트 교체만으로 대응PvP 모드(코어 vs 코어)GameTeam 다중화 및 WaveClearCondition을 "상대 코어 파괴"로 교체시즌제/프레스티지PlayerProgressionData.seasonId 필드 활용크로스 서버 확장PersistenceService 호출 지점의 프록시 연동
-
-24.2 애드온/외부 확장 API
-
-
-api 패키지에 공개된 인터페이스(예: CoreDefenseApi.getSessionManager(), CoreDefenseApi.getRegistry(Class<T>))를 통해 서드파티 플러그인이 새로운 총기/직업/이벤트 리스너를 등록할 수 있는 애드온 생태계를 이후 단계에서 지원 가능하도록 초기 설계 단계부터 api/impl 경계를 분리해두었다.
-
-
-24.3 유지보수 전략
-
-
-모든 밸런스 수치(데미지, 웨이브 난이도, 특성 보너스 등)는 코드가 아닌 Config에 있으므로, 밸런스 패치는 원칙적으로 재배포 없이 Config 파일 교체 + 리로드 커맨드만으로 가능하다.
-신규 개발자 온보딩 시 이 문서와 docs/design 하위 세부 문서(웨이브 밸런스표, 총기 스탯표 등)만으로 전체 구조를 파악할 수 있도록 문서와 코드의 패키지/클래스명을 1:1로 일치시켰다.
-단위 테스트(JUnit5 + MockBukkit)를 순수 로직 클래스(DamageCalculator, ResonanceCalculator, ScoreCalculator, WaveScalingPolicy 등) 중심으로 우선 확보하여, 밸런스 변경 시 회귀 버그를 조기에 발견한다.
-
-
-
-부록 A. 다음 단계 제안
-
-
-본 문서 기준으로 각 도메인별 상세 스펙 문서(예: weapon-spec.md, wave-balance-table.md, npc-trait-table.md) 파생 작성
-WeaponDefinition, MonsterDefinition 등 핵심 Record/인터페이스의 실제 필드 타입 확정(2단계: 코드 스켈레톤 작성 단계에서 진행)
-MockBukkit 기반 테스트 환경 구축 우선순위 확정
-1차 수직 슬라이스(코어+웨이브 1개+총기 1종+장벽 1종) 프로토타입 범위 확정
 
 
