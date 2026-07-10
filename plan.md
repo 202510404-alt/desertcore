@@ -1188,33 +1188,3 @@ MonsterKilledEvent처럼 짧은 시간에 대량 발생 가능한 이벤트는 �
 
 
 
-24. 향후 기능 확장 전략
-
-24.1 콘텐츠 확장 로드맵 (설계가 이미 지원하는 확장 지점)
-
-확장 아이디어이미 준비된 확장 지점신규 총기 추가guns.yml 항목 추가 + 필요 시 FireModeStrategy 신규 구현체신규 몬스터/보스MonsterRegistry + wave_definitions.yml신규 직업/전문화ClassRegistry + classes.yml/specializations.yml신규 포탑/장벽 재질StructureRegistry + turrets.yml/walls.yml신규 NPC 특성TraitRegistry + npc_traits.yml신규 맵/테마 코어SpawnPointGroup + 스키매틱 세트 교체만으로 대응PvP 모드(코어 vs 코어)GameTeam 다중화 및 WaveClearCondition을 "상대 코어 파괴"로 교체시즌제/프레스티지PlayerProgressionData.seasonId 필드 활용크로스 서버 확장PersistenceService 호출 지점의 프록시 연동
-
-24.2 애드온/외부 확장 API
-
-
-api 패키지에 공개된 인터페이스(예: CoreDefenseApi.getSessionManager(), CoreDefenseApi.getRegistry(Class<T>))를 통해 서드파티 플러그인이 새로운 총기/직업/이벤트 리스너를 등록할 수 있는 애드온 생태계를 이후 단계에서 지원 가능하도록 초기 설계 단계부터 api/impl 경계를 분리해두었다.
-
-
-24.3 유지보수 전략
-
-
-모든 밸런스 수치(데미지, 웨이브 난이도, 특성 보너스 등)는 코드가 아닌 Config에 있으므로, 밸런스 패치는 원칙적으로 재배포 없이 Config 파일 교체 + 리로드 커맨드만으로 가능하다.
-신규 개발자 온보딩 시 이 문서와 docs/design 하위 세부 문서(웨이브 밸런스표, 총기 스탯표 등)만으로 전체 구조를 파악할 수 있도록 문서와 코드의 패키지/클래스명을 1:1로 일치시켰다.
-단위 테스트(JUnit5 + MockBukkit)를 순수 로직 클래스(DamageCalculator, ResonanceCalculator, ScoreCalculator, WaveScalingPolicy 등) 중심으로 우선 확보하여, 밸런스 변경 시 회귀 버그를 조기에 발견한다.
-
-
-
-부록 A. 다음 단계 제안
-
-
-본 문서 기준으로 각 도메인별 상세 스펙 문서(예: weapon-spec.md, wave-balance-table.md, npc-trait-table.md) 파생 작성
-WeaponDefinition, MonsterDefinition 등 핵심 Record/인터페이스의 실제 필드 타입 확정(2단계: 코드 스켈레톤 작성 단계에서 진행)
-MockBukkit 기반 테스트 환경 구축 우선순위 확정
-1차 수직 슬라이스(코어+웨이브 1개+총기 1종+장벽 1종) 프로토타입 범위 확정
-
-
